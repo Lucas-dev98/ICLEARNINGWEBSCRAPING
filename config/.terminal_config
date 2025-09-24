@@ -1,0 +1,82 @@
+#!/bin/bash
+
+# ==========================================
+# CONFIGURAÇÕES AVANÇADAS DO TERMINAL
+# ==========================================
+
+# ====== HISTÓRICO MELHORADO ======
+export HISTSIZE=10000
+export HISTFILESIZE=10000
+export HISTCONTROL=ignoreboth:erasedups
+export HISTIGNORE="ls:cd:pwd:exit:date:* --help"
+
+# Salva o histórico imediatamente
+shopt -s histappend
+PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
+
+# ====== NAVEGAÇÃO MELHORADA ======
+# Correção automática de typos em cd
+shopt -s cdspell
+shopt -s dirspell
+
+# Completa hostnames
+shopt -s hostcomplete
+
+# Expand aliases
+shopt -s expand_aliases
+
+# ====== AUTOCOMPLETAR PERSONALIZADO ======
+
+# Autocompletar para comandos Python
+complete -W "$(python -c 'import keyword; print(" ".join(keyword.kwlist))' 2>/dev/null)" python
+complete -W "$(python3 -c 'import keyword; print(" ".join(keyword.kwlist))' 2>/dev/null)" python3
+
+# Autocompletar para pip
+if command -v pip >/dev/null 2>&1; then
+    eval "$(pip completion --bash)" 2>/dev/null
+fi
+
+# Autocompletar para git (se disponível)
+if [ -f /usr/share/bash-completion/completions/git ]; then
+    source /usr/share/bash-completion/completions/git
+fi
+
+# ====== ALIASES ÚTEIS ======
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias ..='cd ..'
+alias ...='cd ../..'
+alias grep='grep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias egrep='egrep --color=auto'
+
+# Aliases para Python
+alias py='python'
+alias py3='python3'
+alias pip3='python3 -m pip'
+alias venv-activate='source venv/bin/activate'
+
+# ====== FUNÇÕES ÚTEIS ======
+
+# Função para criar e ativar ambiente virtual
+mkvenv() {
+    python3 -m venv "$1" && source "$1/bin/activate"
+}
+
+# Função para buscar arquivos rapidamente
+ff() {
+    find . -name "*$1*" -type f 2>/dev/null
+}
+
+# Função para buscar em arquivos
+search() {
+    grep -r -n --color=auto "$1" . 2>/dev/null
+}
+
+echo "🚀 Configurações avançadas do terminal carregadas!"
+echo "💡 Dicas:"
+echo "   - Use TAB para autocompletar"
+echo "   - Use ↑/↓ para buscar no histórico"
+echo "   - Use 'ff nome' para buscar arquivos"
+echo "   - Use 'search texto' para buscar em arquivos"

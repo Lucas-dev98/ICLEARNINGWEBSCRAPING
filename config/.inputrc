@@ -1,0 +1,35 @@
+# ==========================================
+# CONFIGURAÇÃO DE SUGESTÕES NO TERMINAL
+# ==========================================
+
+# Habilita autocompletar case-insensitive
+set completion-ignore-case on
+
+# Completa automaticamente após o primeiro TAB
+set show-all-if-ambiguous on
+
+# Mostra estatísticas durante o completar
+set show-all-if-unmodified on
+
+# Habilita o completar com seta para cima/baixo
+set menu-complete-display-prefix on
+
+# Navegação no histórico com busca
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+
+# Ctrl+left/right para pular palavras
+"\e[1;5C": forward-word
+"\e[1;5D": backward-word
+
+# Melhor display dos matches
+set colored-stats on
+set visible-stats on
+set mark-symlinked-directories on
+
+# Page up/down para navegar no histórico
+"\e[5~": history-search-backward
+"\e[6~": history-search-forward
+
+# TAB cycles através das opções
+TAB: menu-complete

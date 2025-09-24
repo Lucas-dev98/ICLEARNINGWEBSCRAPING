@@ -1,0 +1,105 @@
+# ===================================================================
+# DEPENDÊNCIAS DO PROJETO DE WEB SCRAPING
+# ===================================================================
+# 
+# Este arquivo contém todas as bibliotecas necessárias para executar
+# os scripts de web scraping deste projeto educacional.
+#
+# Instalação:
+# pip install -r requirements.txt
+#
+# OU instalar individualmente:
+# pip install requests beautifulsoup4 pandas lxml html5lib
+# ===================================================================
+
+# === BIBLIOTECAS PRINCIPAIS OBRIGATÓRIAS ===
+
+# Requisições HTTP - OBRIGATÓRIA para todos os exemplos
+requests>=2.31.0
+# Usada em:
+# - example_01_RequestHTML.py
+# - exercice_01.py  
+# - scraper_noticias.py
+# Funcionalidade: Download de páginas web, requisições HTTP/HTTPS
+
+# Parsing HTML - OBRIGATÓRIA para todos os exercícios BeautifulSoup
+beautifulsoup4>=4.12.0
+# Usada em:
+# - example_02_parsing_beatifulSoup.py
+# - example_03_DOMnavigation.py
+# - exercice_02.py
+# - exercice_03.py
+# - exercice_04.py
+# - exercice_05.py
+# - exercice_06.py
+# - scraper_noticias.py
+# Funcionalidade: Parsing HTML/XML, navegação DOM, extração de dados
+
+# === BIBLIOTECAS PARA ANÁLISE DE DADOS ===
+
+# Análise de Dados - OBRIGATÓRIA para scraper_noticias.py
+pandas>=2.0.0
+# Usada em:
+# - scraper_noticias.py
+# Funcionalidade: DataFrames, análise estatística, exportação de dados
+
+# === PARSERS ALTERNATIVOS (OPCIONAIS MAS RECOMENDADOS) ===
+
+# Parser rápido para BeautifulSoup - OPCIONAL mas RECOMENDADO
+lxml>=4.9.0
+# Melhora performance do BeautifulSoup
+# Uso: BeautifulSoup(html, "lxml") ao invés de "html.parser"
+
+# Parser robusto para HTML malformado - OPCIONAL
+html5lib>=1.1
+# Para HTML muito quebrado/malformado
+# Uso: BeautifulSoup(html, "html5lib")
+
+# === BIBLIOTECAS PADRÃO DO PYTHON (JÁ INCLUÍDAS) ===
+# 
+# As seguintes bibliotecas são parte da biblioteca padrão do Python
+# e NÃO precisam ser instaladas separadamente:
+#
+# - socket          # Operações de rede (DNS)
+# - urllib.parse    # Parsing de URLs  
+# - os              # Operações do sistema
+# - re              # Expressões regulares
+# - csv             # Manipulação de CSV
+# - time            # Controle de tempo/delay
+# - datetime        # Manipulação de datas
+# - collections     # Counter e outras estruturas
+
+# === DEPENDÊNCIAS OPCIONAIS PARA PRODUÇÃO ===
+
+# Para projetos avançados (descomente se necessário):
+
+# Selenium para JavaScript
+# selenium>=4.0.0
+
+# Para requisições assíncronas
+# aiohttp>=3.8.0
+# asyncio (já incluído no Python 3.7+)
+
+# Para cache/persistência
+# redis>=4.0.0
+# sqlite3 (já incluído no Python)
+
+# Para logs estruturados
+# loguru>=0.7.0
+
+# Para configuração avançada
+# python-dotenv>=1.0.0
+
+# Para testes
+# pytest>=7.0.0
+# pytest-cov>=4.0.0
+
+# ===================================================================
+# VERSÕES MÍNIMAS TESTADAS:
+# - Python: 3.8+
+# - requests: 2.25.0+
+# - beautifulsoup4: 4.9.0+ 
+# - pandas: 1.3.0+
+# - lxml: 4.6.0+
+# - html5lib: 1.1+
+# ===================================================================
