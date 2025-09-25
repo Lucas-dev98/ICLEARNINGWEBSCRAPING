@@ -658,3 +658,42 @@ if __name__ == "__main__":
 else:
     # Mensagem para quando o módulo é importado
     print("📦 Módulo NoticiasScraper carregado. Execute exemplo_uso() para ver demonstração.")
+
+
+
+
+
+
+
+# TODO: Implementar verificação de argumentos das tags (ex: negrito, itálico) - Padrão em CSS
+
+# Verificar se consigo verificar argumento das tags ( Sendo Negritos, etc.) - Padrão em CSS
+
+# Selenium vai automatizar 
+
+# Ferramenta DATETIME PYTHON 
+
+# Pagina da UVV - request python
+
+# https://www.uvv.br/noticias/ - pegar todas as noticias
+
+# Todas as noticias do inova serem rastreadas (mes de setembro) - request.
+
+# Jean-Rémi Bourguet
+# 12:34
+# https://docs.python.org/3/library/datetime.html
+# Jean-Rémi Bourguet
+# 12:36
+# https://pypi.org/project/requests/
+# Jean-Rémi Bourguet
+# 12:38
+# https://uvv.br/noticias/
+
+
+# Quero que revise o codigo para que esteja utilizando as ferramentas DATETIME, request python, e que seja implementado 
+# as verificações de argumentos das tags css, ou seja conseguir resgatar as informações pedidas atraves dessa estrutura.
+# Sendo que o que vai ser resgatado é todas as noticias do site da UVV - https://www.uvv.br/noticias/ sendo que essas noticias
+# tem que ser sobre a inovaweek entre agosto e setembro de 2025.
+
+# Quero que contenha o titulo, o link, timestamp de quando foi coletado, o conteudo da noticia, autor da noticia, 
+# data de publicação, e que seja exportado para um arquivo CSV.
