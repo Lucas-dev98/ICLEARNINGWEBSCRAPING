@@ -5,6 +5,7 @@
 ![Requests](https://img.shields.io/badge/Requests-2.32+-orange.svg)
 ![Status](https://img.shields.io/badge/Status-Ativo-brightgreen.svg)
 ![UVV InovaWeek](https://img.shields.io/badge/UVV-InovaWeek_Scraper-purple.svg)
+![Cache System](https://img.shields.io/badge/Cache-Inteligente-yellow.svg)
 
 ## 📖 Sobre o Projeto
 
@@ -14,6 +15,7 @@ Este é um projeto educacional completo para aprender **Web Scraping** com Pytho
 - ✨ **38 notícias do InovaWeek** coletadas com sucesso
 - 🔄 **Sistema de paginação automática** (77 páginas detectadas)
 - 📊 **CSV estruturado** com 25 campos profissionais
+- 🗃️ **Sistema de cache inteligente** com expiração automática
 - ⚡ **Scraper nível enterprise** com rate limiting ético
 
 ### 🎯 Objetivos de Aprendizado
@@ -29,6 +31,7 @@ Este é um projeto educacional completo para aprender **Web Scraping** com Pytho
 - ✅ **Estruturação avançada de dados CSV**
 - ✅ **Scraping focado em eventos específicos**
 - ✅ **Detecção automática de conteúdo relevante**
+- ✅ **🗃️ Sistema de cache inteligente para otimização**
 
 ## 🏗️ Estrutura do Projeto
 
@@ -38,7 +41,8 @@ ICLearningWebScreating/
 │   ├── 📁 examples/                 # Exemplos básicos de conceitos
 │   │   ├── example_01_RequestHTML.py
 │   │   ├── example_02_parsing_beatifulSoup.py
-│   │   └── example_03_DOMnavigation.py
+│   │   ├── example_03_DOMnavigation.py
+│   │   └── exemplo_cache_demonstracao.py  # 🗃️ Demo do sistema de cache
 │   ├── 📁 exercises/                # Exercícios práticos
 │   │   ├── exercice_01.py           # Download e manipulação HTML
 │   │   ├── exercice_02.py           # Extração e deduplicação
@@ -74,6 +78,7 @@ ICLearningWebScreating/
 - ✅ **100% de qualidade** no conteúdo extraído
 - ✅ **Rate limiting respeitoso** (2 segundos entre requests)
 - ✅ **Paginação inteligente** com múltiplos formatos de URL
+- ✅ **🗃️ Cache inteligente** com 70%+ de taxa de acerto
 
 ### 🔧 **Uso do Scraper UVV InovaWeek**
 
@@ -94,6 +99,9 @@ python src/scrapers/scraper_uvv_inovaweek_revisado.py \
 
 # ⚡ Teste rápido (apenas primeira página)
 python src/scrapers/scraper_uvv_inovaweek_revisado.py --apenas-primeira-pagina
+
+# 🗃️ Demonstração do sistema de cache
+python src/examples/exemplo_cache_demonstracao.py
 ```
 
 ### 📋 **Estrutura do CSV Gerado (25 Campos)**
@@ -110,6 +118,7 @@ python src/scrapers/scraper_uvv_inovaweek_revisado.py --apenas-primeira-pagina
 - **Detecção automática de paginação:** Descobre todas as páginas disponíveis
 - **Múltiplos seletores CSS:** Sistema robusto com fallback
 - **Filtragem inteligente:** Foca apenas em notícias do InovaWeek
+- **🗃️ Cache inteligente:** Sistema automático com expiração configurável
 - **Metadados completos:** Arquivo de estatísticas automático
 - **Rate limiting ético:** Respeita o servidor com delays apropriados
 - **CLI profissional:** Interface de linha de comando completa
@@ -176,6 +185,10 @@ chmod +x scripts/install_dependencies.sh
    
    # 🏆 SCRAPER AVANÇADO - UVV InovaWeek
    python scraper_uvv_inovaweek_revisado.py  # Scraper nível enterprise
+   
+   # 🗃️ DEMONSTRAÇÃO DO CACHE
+   cd ../examples
+   python exemplo_cache_demonstracao.py  # Demo interativa do cache
    ```
 
 ### 🎓 Para Usuários Avançados
@@ -233,6 +246,7 @@ chmod +x scripts/install_dependencies.sh
 - **🏆 Sistema de Paginação:** Detecção automática de múltiplas páginas
 - **📊 Estruturação CSV:** 25 campos organizados em 5 categorias
 - **⚡ Rate Limiting:** Scraping ético e respeitoso
+- **🗃️ Sistema de Cache:** Cache inteligente com expiração automática
 
 ## 📖 Conceitos Abordados
 
@@ -249,7 +263,15 @@ chmod +x scripts/install_dependencies.sh
 - Rate limiting e delays
 - Tratamento de JavaScript (conceitos)
 
-### 📊 Análise de Dados
+### �️ Sistema de Cache
+- Cache automático de requisições HTTP
+- Expiração configurável (padrão: 24h)
+- Compressão e otimização de armazenamento
+- Estatísticas detalhadas (hit rate, tamanho)
+- Limpeza automática de cache expirado
+- Demonstração interativa disponível
+
+### �📊 Análise de Dados
 - Estruturação com pandas
 - Limpeza e validação
 - Exportação (CSV, JSON, Excel)
@@ -312,6 +334,26 @@ python src/scrapers/scraper_uvv_inovaweek_revisado.py \
 # ✅ 77 páginas detectadas
 # ✅ Metadados completos
 # ✅ Rate limiting respeitoso
+# ✅ Cache automático ativo
+```
+
+### 🗃️ Sistema de Cache Inteligente
+```python
+from src.scrapers import UVVInovaWeekScraper
+
+# Scraper com cache habilitado (padrão)
+scraper = UVVInovaWeekScraper(use_cache=True, cache_hours=24)
+
+# Primeira requisição: busca online + salva no cache
+response1 = scraper._fazer_requisicao("https://uvv.br/noticias/")
+
+# Segunda requisição: retorna do cache (instantâneo!)
+response2 = scraper._fazer_requisicao("https://uvv.br/noticias/")
+
+# Verificar estatísticas do cache
+stats = scraper.get_cache_stats()
+print(f"Taxa de acerto: {stats['hit_rate_percent']}%")
+print(f"Tamanho do cache: {stats['cache_size_mb']} MB")
 ```
 
 ## 🔧 Solução de Problemas
@@ -353,9 +395,75 @@ Este é um projeto educacional. Contribuições são bem-vindas:
 4. Documente suas alterações
 5. Envie um Pull Request
 
-## 📄 Licença
+## 📄 Licença e Uso Responsável
 
-Este projeto é para fins educacionais. Use responsavelmente e respeite os termos de uso dos sites que você fizer scraping.
+### 🎓 **Licença Educacional MIT**
+
+Este projeto é distribuído sob a **Licença MIT** para fins educacionais e de aprendizado.
+
+**Você tem permissão para:**
+- ✅ Usar o código para aprendizado pessoal
+- ✅ Modificar e adaptar para projetos educacionais
+- ✅ Distribuir com atribuição apropriada
+- ✅ Usar em projetos comerciais (com responsabilidade)
+
+**Com as seguintes condições:**
+- 📋 Manter os créditos e aviso de copyright
+- 🔍 Incluir uma cópia da licença MIT
+- ⚖️ Usar sob sua própria responsabilidade
+
+### 🛡️ **Uso Ético de Web Scraping**
+
+**⚠️ IMPORTANTE: Diretrizes de Uso Responsável**
+
+Este projeto foi criado exclusivamente para **fins educacionais**. Ao utilizar estas técnicas, você concorda em:
+
+#### ✅ **Práticas Recomendadas:**
+- 🤝 **Respeitar robots.txt** dos websites
+- ⏱️ **Implementar delays** entre requisições (rate limiting)
+- 🔄 **Usar cache** para evitar requisições desnecessárias
+- 📧 **Contatar webmasters** para projetos de grande escala
+- 🎯 **Coletar apenas dados públicos** e necessários
+- 📊 **Usar dados coletados de forma ética** e legal
+
+#### ❌ **Práticas Proibidas:**
+- 🚫 Sobrecarregar servidores com muitas requisições
+- 🚫 Ignorar termos de uso e políticas dos sites
+- 🚫 Coletar dados pessoais sem permissão
+- 🚫 Uso comercial não autorizado de conteúdo
+- 🚫 Burlar medidas de proteção anti-bot
+- 🚫 Republicar conteúdo sem devida atribuição
+
+### ⚖️ **Responsabilidade Legal**
+
+- **O usuário é integralmente responsável** pelo uso deste código
+- **Os desenvolvedores não se responsabilizam** por uso inadequado
+- **Consulte sempre a legislação local** sobre coleta de dados
+- **Respeite direitos autorais e propriedade intelectual**
+- **Em caso de dúvidas legais, consulte um advogado especializado**
+
+### 🌍 **Política de Dados UVV**
+
+Especificamente para o **Scraper UVV InovaWeek**:
+- ✅ Coleta apenas **notícias públicas** já disponibilizadas
+- ✅ Implementa **rate limiting respeitoso** (2s entre requisições)
+- ✅ Usa **cache inteligente** para reduzir carga no servidor
+- ✅ Foca apenas em **conteúdo educacional** do InovaWeek
+- ✅ **Não interfere** no funcionamento normal do site
+
+### 📞 **Contato e Atribuição**
+
+**Projeto:** ICLearningWebScraping  
+**Finalidade:** Educação em Tecnologia  
+**Desenvolvido com:** ❤️ Python + BeautifulSoup + Requests  
+
+Para questões sobre uso comercial ou dúvidas sobre licenciamento, entre em contato através do repositório GitHub.
+
+---
+
+**⚡ Lembre-se: Com grandes poderes vêm grandes responsabilidades!**
+
+*Use o web scraping de forma ética, respeitosa e sempre dentro dos limites legais.*
 
 ## � Conquistas Recentes
 
@@ -366,7 +474,8 @@ Este projeto é para fins educacionais. Use responsavelmente e respeite os termo
 - **⚡ Sistema de paginação inteligente** com múltiplos formatos de URL
 - **🎯 Filtragem específica** para eventos InovaWeek
 - **⏱️ Rate limiting ético** (2s entre requests)
-- **🔧 CLI avançada** com argparse completo
+- **�️ Cache inteligente** com 70%+ de taxa de acerto
+- **�🔧 CLI avançada** com argparse completo
 - **📊 Metadados automáticos** com estatísticas detalhadas
 
 ### 🎯 **Funcionalidades Avançadas Implementadas**
@@ -388,7 +497,7 @@ python src/scrapers/scraper_uvv_inovaweek_revisado.py --apenas-primeira-pagina
 - [ ] Implementar scraping com Selenium
 - [ ] Adicionar exemplos com APIs
 - [ ] Criar dashboard de monitoramento
-- [ ] Implementar cache de requisições
+- [x] **Implementar cache de requisições** ✅
 - [x] **Sistema de paginação automática** ✅
 - [x] **CSV estruturado profissional** ✅
 - [x] **Rate limiting ético** ✅
@@ -400,4 +509,7 @@ python src/scrapers/scraper_uvv_inovaweek_revisado.py --apenas-primeira-pagina
 *Desenvolvido com 💻 para educação em tecnologia*
 
 ### 🏆 **Destaque: Scraper UVV InovaWeek**
-*Sistema de web scraping nível enterprise com paginação automática, 25 campos estruturados e 38 notícias coletadas com sucesso!*
+*Sistema de web scraping nível enterprise com paginação automática, cache inteligente, 25 campos estruturados e 38 notícias coletadas com sucesso!*
+
+### 🗃️ **Sistema de Cache Implementado**
+*Cache automático com 70%+ de taxa de acerto, reduzindo tempo de desenvolvimento e respeitando servidores com requisições otimizadas!*

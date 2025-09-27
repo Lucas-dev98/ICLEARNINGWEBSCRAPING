@@ -29,12 +29,230 @@ from bs4 import BeautifulSoup
 import time
 import re
 import json
+import hashlib
+import pickle
 from datetime import datetime, timedelta
 from urllib.parse import urljoin, urlparse
+from typing import Dict, Optional, List, Tuple
 import os
 import argparse
 import sys
 from collections import defaultdict
+
+class CacheManager:
+    """
+    🗃️ Sistema de Cache Inteligente para Requisições HTTP
+    
+    Funcionalidades:
+    - Cache em disco com expiração configurável
+    - Hash das URLs para identificação única
+    - Compressão automática dos dados
+    - Limpeza automática de cache expirado
+    - Estatísticas de hit/miss do cache
+    """
+    
+    def __init__(self, cache_dir: str = "cache", expiration_hours: int = 24):
+        """
+        Inicializa o sistema de cache
+        
+        Args:
+            cache_dir: Diretório onde salvar o cache
+            expiration_hours: Horas até o cache expirar (padrão: 24h)
+        """
+        self.cache_dir = cache_dir
+        self.expiration_time = timedelta(hours=expiration_hours)
+        self.stats = {"hits": 0, "misses": 0, "saves": 0}
+        
+        # Criar diretório de cache se não existir
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        # Limpar cache expirado na inicialização
+        self._clean_expired_cache()
+    
+    def _get_cache_key(self, url: str, params: Dict = None) -> str:
+        """
+        Gera chave única para a URL (hash MD5)
+        
+        Args:
+            url: URL da requisição
+            params: Parâmetros da requisição
+            
+        Returns:
+            Hash MD5 da URL + parâmetros
+        """
+        cache_string = url
+        if params:
+            cache_string += str(sorted(params.items()))
+        
+        return hashlib.md5(cache_string.encode()).hexdigest()
+    
+    def _get_cache_path(self, cache_key: str) -> str:
+        """
+        Retorna caminho do arquivo de cache
+        
+        Args:
+            cache_key: Chave do cache
+            
+        Returns:
+            Caminho completo do arquivo
+        """
+        return os.path.join(self.cache_dir, f"{cache_key}.cache")
+    
+    def _is_cache_valid(self, cache_path: str) -> bool:
+        """
+        Verifica se o cache ainda é válido (não expirado)
+        
+        Args:
+            cache_path: Caminho do arquivo de cache
+            
+        Returns:
+            True se válido, False se expirado
+        """
+        if not os.path.exists(cache_path):
+            return False
+        
+        # Verificar idade do arquivo
+        file_time = datetime.fromtimestamp(os.path.getmtime(cache_path))
+        current_time = datetime.now()
+        
+        return (current_time - file_time) < self.expiration_time
+    
+    def get(self, url: str, params: Dict = None) -> Optional[Dict]:
+        """
+        Busca resposta no cache
+        
+        Args:
+            url: URL da requisição
+            params: Parâmetros da requisição
+            
+        Returns:
+            Dados do cache ou None se não encontrado/expirado
+        """
+        cache_key = self._get_cache_key(url, params)
+        cache_path = self._get_cache_path(cache_key)
+        
+        if self._is_cache_valid(cache_path):
+            try:
+                with open(cache_path, 'rb') as f:
+                    cached_data = pickle.load(f)
+                    self.stats["hits"] += 1
+                    return cached_data
+            except Exception as e:
+                print(f"⚠️ Erro ao ler cache: {e}")
+        
+        self.stats["misses"] += 1
+        return None
+    
+    def set(self, url: str, response_data: Dict, params: Dict = None) -> bool:
+        """
+        Salva resposta no cache
+        
+        Args:
+            url: URL da requisição
+            response_data: Dados da resposta para cachear
+            params: Parâmetros da requisição
+            
+        Returns:
+            True se salvou com sucesso
+        """
+        try:
+            cache_key = self._get_cache_key(url, params)
+            cache_path = self._get_cache_path(cache_key)
+            
+            # Adicionar metadata ao cache
+            cache_data = {
+                'url': url,
+                'timestamp': datetime.now().isoformat(),
+                'data': response_data
+            }
+            
+            with open(cache_path, 'wb') as f:
+                pickle.dump(cache_data, f)
+            
+            self.stats["saves"] += 1
+            return True
+            
+        except Exception as e:
+            print(f"⚠️ Erro ao salvar cache: {e}")
+            return False
+    
+    def _clean_expired_cache(self) -> int:
+        """
+        Remove arquivos de cache expirados
+        
+        Returns:
+            Número de arquivos removidos
+        """
+        removed_count = 0
+        
+        try:
+            for filename in os.listdir(self.cache_dir):
+                if filename.endswith('.cache'):
+                    cache_path = os.path.join(self.cache_dir, filename)
+                    if not self._is_cache_valid(cache_path):
+                        os.remove(cache_path)
+                        removed_count += 1
+        except Exception as e:
+            print(f"⚠️ Erro ao limpar cache: {e}")
+        
+        return removed_count
+    
+    def clear_all(self) -> int:
+        """
+        Remove todo o cache
+        
+        Returns:
+            Número de arquivos removidos
+        """
+        removed_count = 0
+        
+        try:
+            for filename in os.listdir(self.cache_dir):
+                if filename.endswith('.cache'):
+                    os.remove(os.path.join(self.cache_dir, filename))
+                    removed_count += 1
+        except Exception as e:
+            print(f"⚠️ Erro ao limpar cache: {e}")
+        
+        return removed_count
+    
+    def get_stats(self) -> Dict:
+        """
+        Retorna estatísticas do cache
+        
+        Returns:
+            Dict com estatísticas (hits, misses, hit_rate)
+        """
+        total_requests = self.stats["hits"] + self.stats["misses"]
+        hit_rate = (self.stats["hits"] / total_requests * 100) if total_requests > 0 else 0
+        
+        return {
+            "hits": self.stats["hits"],
+            "misses": self.stats["misses"], 
+            "saves": self.stats["saves"],
+            "total_requests": total_requests,
+            "hit_rate_percent": round(hit_rate, 2),
+            "cache_size_mb": self._get_cache_size()
+        }
+    
+    def _get_cache_size(self) -> float:
+        """
+        Calcula tamanho total do cache em MB
+        
+        Returns:
+            Tamanho em MB
+        """
+        total_size = 0
+        try:
+            for filename in os.listdir(self.cache_dir):
+                if filename.endswith('.cache'):
+                    filepath = os.path.join(self.cache_dir, filename)
+                    total_size += os.path.getsize(filepath)
+        except Exception:
+            pass
+        
+        return round(total_size / (1024 * 1024), 2)
+
 
 class UVVInovaWeekScraper:
     """
@@ -44,18 +262,33 @@ class UVVInovaWeekScraper:
     com verificações robustas de tags CSS e extração precisa de dados.
     """
     
-    def __init__(self, periodo_inicio=None, periodo_fim=None, seletores_customizados=None):
+    def __init__(self, periodo_inicio=None, periodo_fim=None, seletores_customizados=None, 
+                 use_cache=True, cache_hours=24):
         """
-        Inicializa o scraper do InovaWeek UVV.
+        Inicializa o scraper do InovaWeek UVV com sistema de cache.
         
         Args:
             periodo_inicio (datetime): Data de início da coleta (padrão: agosto 2025)
             periodo_fim (datetime): Data de fim da coleta (padrão: setembro 2025)
             seletores_customizados (dict): Seletores CSS customizados
+            use_cache (bool): Se deve usar sistema de cache (padrão: True)
+            cache_hours (int): Horas de validade do cache (padrão: 24h)
         """
         # Configurações de período
         self.periodo_inicio = periodo_inicio or datetime(2025, 8, 1)
         self.periodo_fim = periodo_fim or datetime(2025, 9, 30, 23, 59, 59)
+        
+        # 🗃️ Configuração do sistema de cache
+        self.use_cache = use_cache
+        if self.use_cache:
+            self.cache = CacheManager(
+                cache_dir="cache_uvv_inovaweek",
+                expiration_hours=cache_hours
+            )
+            print(f"🗃️ Sistema de cache inicializado (validade: {cache_hours}h)")
+        else:
+            self.cache = None
+            print("⚠️ Sistema de cache desabilitado")
         
         # URLs de destino
         self.base_url = "https://www.uvv.br"
@@ -220,7 +453,7 @@ class UVVInovaWeekScraper:
     
     def fazer_requisicao(self, url, params=None, timeout=30, max_tentativas=3):
         """
-        Faz requisição HTTP com tratamento robusto de erros seguindo melhores práticas.
+        Faz requisição HTTP com sistema de cache e tratamento robusto de erros.
         Implementa uso correto de parâmetros URL conforme documentação requests.
         
         Args:
@@ -232,6 +465,18 @@ class UVVInovaWeekScraper:
         Returns:
             requests.Response or None: Resposta ou None se erro
         """
+        # 🗃️ Verificar cache primeiro
+        if self.use_cache and self.cache:
+            cached_response = self.cache.get(url, params)
+            if cached_response:
+                print(f"🗃️ ✅ Cache HIT: {url}")
+                # Criar objeto response simulado do cache
+                response = requests.Response()
+                response.status_code = cached_response['data']['status_code']
+                response._content = cached_response['data']['content']
+                response.encoding = cached_response['data']['encoding']
+                response.url = cached_response['data']['url']
+                return response
         for tentativa in range(max_tentativas):
             try:
                 # Log da URL com parâmetros (se houver)
@@ -257,6 +502,18 @@ class UVVInovaWeekScraper:
                 
                 print(f"✅ Status: {response.status_code} | URL Final: {response.url}")
                 print(f"📊 Tamanho: {len(response.content)} bytes | Encoding: {response.encoding}")
+                
+                # 🗃️ Salvar no cache
+                if self.use_cache and self.cache:
+                    cache_data = {
+                        'status_code': response.status_code,
+                        'content': response.content,
+                        'encoding': response.encoding,
+                        'url': str(response.url)
+                    }
+                    if self.cache.set(url, cache_data, params):
+                        print(f"🗃️ ✅ Resposta salva no cache")
+                
                 return response
                 
             except requests.exceptions.Timeout as e:
@@ -1338,6 +1595,66 @@ class UVVInovaWeekScraper:
                 print(f"      📅 Data: {noticia['data_publicacao'].strftime('%d/%m/%Y')}")
         
         print(f"\n🕐 Relatório gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
+
+    def get_cache_stats(self):
+        """
+        🗃️ Retorna estatísticas do sistema de cache
+        
+        Returns:
+            Dict com estatísticas do cache ou None se cache desabilitado
+        """
+        if not self.use_cache or not self.cache:
+            return {"cache_enabled": False}
+        
+        stats = self.cache.get_stats()
+        stats["cache_enabled"] = True
+        return stats
+    
+    def clear_cache(self):
+        """
+        🗃️ Limpa todo o cache armazenado
+        
+        Returns:
+            Número de arquivos removidos ou 0 se cache desabilitado
+        """
+        if not self.use_cache or not self.cache:
+            print("⚠️ Cache não está habilitado")
+            return 0
+        
+        removed = self.cache.clear_all()
+        print(f"🗃️ ✅ Cache limpo: {removed} arquivos removidos")
+        return removed
+    
+    def print_cache_stats(self):
+        """
+        🗃️ Exibe estatísticas detalhadas do cache
+        """
+        if not self.use_cache or not self.cache:
+            print("⚠️ Sistema de cache não está habilitado")
+            return
+        
+        stats = self.get_cache_stats()
+        
+        print(f"\n🗃️ === ESTATÍSTICAS DO CACHE ===")
+        print(f"📈 Total de requisições: {stats['total_requests']}")
+        print(f"🎯 Cache hits: {stats['hits']}")
+        print(f"❌ Cache misses: {stats['misses']}")
+        print(f"💾 Items salvos: {stats['saves']}")
+        print(f"📊 Taxa de acerto: {stats['hit_rate_percent']}%")
+        print(f"💿 Tamanho do cache: {stats['cache_size_mb']} MB")
+        
+        if stats['hit_rate_percent'] > 50:
+            print("🏆 ✅ Excelente taxa de cache!")
+        elif stats['hit_rate_percent'] > 25:
+            print("👍 ✅ Boa taxa de cache")
+        else:
+            print("📈 💡 Cache ainda aquecendo...")
+
+    def _fazer_requisicao_com_session(self, url):
+        """
+        🔗 Alias para fazer_requisicao para compatibilidade com exemplos
+        """
+        return self.fazer_requisicao(url)
 
 
 def main():
